@@ -1,3 +1,26 @@
+/**
+ * AMARU PRODUCT ARCHIVE COMMAND CENTER
+ * 
+ * --- HOW TO MANUALLY ADD PRODUCTS & IMAGES VIA GITHUB ---
+ * 
+ * 1. FOLDER SETUP:
+ *    - All product images should be placed in: /public/images/ (or you can create /public/assets/products/)
+ *    - Example naming: "puffy-jacket-black.jpg", "beanie-limited.png"
+ * 
+ * 2. UPDATING THIS FILE:
+ *    - Copy an existing product block below.
+ *    - Update the 'id' (make it unique, e.g., "p3", "sh5").
+ *    - Update 'image' path to match your folder (e.g., "/images/your-new-image.jpg").
+ *    - Adjust 'price', 'category', and 'description'.
+ * 
+ * 3. CATEGORIES:
+ *    - Ensure the 'category' matches one of the values in the 'categories' array at the bottom.
+ * 
+ * 4. GITHUB ACTION:
+ *    - After uploading files and editing this script, commit and push to your repository.
+ *    - GitHub Pages will automatically rebuild the site with your new drops.
+ */
+
 export const products = [
   // --- SWEATSHIRTS (750/-) ---
   {

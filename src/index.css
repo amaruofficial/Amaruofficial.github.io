@@ -13,8 +13,10 @@
 
 @layer base {
   body {
-    @apply bg-black text-white antialiased font-light selection:bg-[#0096ff]/30 selection:text-white transition-colors duration-500;
+    @apply bg-black text-white antialiased font-light selection:bg-[#0096ff]/30 selection:text-white transition-colors duration-500 overflow-x-hidden;
     scroll-behavior: smooth;
+    width: 100vw;
+    position: relative;
   }
 }
 

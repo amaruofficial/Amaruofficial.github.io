@@ -1270,7 +1270,7 @@ const ShopView = ({
   const categories = SITE_CATEGORIES;
 
   return (
-    <section className="pt-32 md:pt-48 pb-20 md:pb-32 px-4 md:px-6 min-h-screen">
+    <section className="pt-32 md:pt-48 pb-20 md:pb-32 px-4 md:px-6 min-h-screen relative">
       <div className="max-w-7xl mx-auto">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-16 md:mb-24 gap-8">
           <div className="relative">
@@ -1781,6 +1781,12 @@ const AdminView = ({
         {activeTab === 'inventory' ? (
           <>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8 mb-12 md:mb-20">
+                {/* 
+                    ADMIN NOTE: 
+                    "Initiate Drop" below allows you to preview new products instantly.
+                    Changes made here are saved to YOUR browser only.
+                    To finalize and share with customers on GitHub, follow instructions in src/data/products.ts.
+                */}
                 {[
                   { label: 'ARCHIVE DEPTH', val: products.length, suffix: 'SKUs' },
                   { label: 'RETAIL VALUE', val: '2.4M', suffix: 'Ksh' },
@@ -2052,7 +2058,8 @@ export default function App() {
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 10000]);
   const [allProducts, setAllProducts] = useState<Product[]>(SAMPLE_PRODUCTS);
 
-  // Persistence (Mock)
+  // Persistence (Local storage - used for temporary additions via the Admin Portal)
+  // IMPORTANT: For permanent updates on GitHub, edit src/data/products.ts directly.
   useEffect(() => {
     const savedCart = localStorage.getItem('amaru_cart');
     const savedWishlist = localStorage.getItem('amaru_wishlist');
@@ -2178,6 +2185,12 @@ export default function App() {
 
   return (
     <div className="min-h-screen selection:bg-[#0096ff]/30 transition-colors duration-500 bg-black text-white">
+      {/* 
+          GITHUB IMAGE MANAGEMENT DIRECTIVE:
+          Images are served from the /public folder. 
+          When adding new products manually on GitHub, place images in /public/images/
+          and reference them as "/images/filename.jpg" in src/data/products.ts.
+      */}
       {view !== 'login' && (
         <Navbar 
           onViewChange={handlePageChange} 
