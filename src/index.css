@@ -82,7 +82,9 @@
   background: #0096ff;
 }
 
-/* Gradients & Polished Styles */
+.glow-hover {
+  @apply transition-all duration-700 hover:border-[#0096ff]/50 hover:shadow-[0_0_20px_rgba(0,150,255,0.15)];
+}
 .hero-gradient {
   background: radial-gradient(circle at top right, #0044ff15, transparent), 
               radial-gradient(circle at bottom left, #00d4ff10, transparent);

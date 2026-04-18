@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import { products as SAMPLE_PRODUCTS, categories as SITE_CATEGORIES } from './data/products';
 import { 
   ShoppingBag, 
   Menu, 
@@ -55,15 +56,20 @@ interface Product {
   id: string;
   name: string;
   price: number;
-  category: 'Hoodies' | 'T-Shirts' | 'Outerwear' | 'Bottoms' | 'Accessories' | 'Signature';
-  badge?: string;
+  originalPrice?: number | null;
+  category: string;
+  badge?: string | null;
   description: string;
   image: string;
   secondaryImage?: string; // Hover editorial view
   moreImages?: string[];
   isNew?: boolean;
   rating?: number;
-  reviews?: Review[];
+  reviews?: any; // Can be number or array
+  inStock?: boolean;
+  stockCount?: number;
+  campusPickup?: boolean;
+  tags?: string[];
 }
 
 interface CartItem extends Product {
@@ -105,239 +111,6 @@ const MEDIA = {
 
 // --- Mock Data Based on Uploaded Images ---
 
-const SAMPLE_PRODUCTS: Product[] = [
-  // Signature & Grails
-  {
-    id: 'sig-1',
-    name: 'AMARU "Masterpiece" Trench',
-    price: 18500,
-    category: 'Signature',
-    badge: 'Grail',
-    description: 'Double-breasted oversized wool coat with laser-etched silk lining. Crafted for those who define the future of fashion. Museum quality piece. The fit is perfect.',
-    image: 'https://images.unsplash.com/photo-1544022613-e879a7935ed9?q=80&w=1200',
-    secondaryImage: 'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?q=80&w=1200',
-    moreImages: [
-      'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?q=80&w=1200',
-      'https://images.unsplash.com/photo-1552374196-1ab2a1c593e8?q=80&w=1200'
-    ],
-    isNew: true,
-    rating: 5.0,
-    reviews: [
-      { id: 'r1', userName: '@urban_king', rating: 5, comment: 'Museum quality piece. The fit is perfect.', date: 'APR 12, 2026' },
-      { id: 'r2', userName: 'Kim_A', rating: 5, comment: 'Worth every shilling. Incredible detail.', date: 'MAR 28, 2026' }
-    ]
-  },
-  {
-    id: 'sig-2',
-    name: 'Exquisite Leather Biker',
-    price: 24000,
-    category: 'Signature',
-    badge: 'Limited',
-    description: 'Italian full-grain leather with Nairobi-cast silver hardware. Each fragment is unique to its owner.',
-    image: 'https://images.unsplash.com/photo-1551028719-00167b16eac5?q=80&w=1200',
-    secondaryImage: 'https://images.unsplash.com/photo-1520975661595-6453be3f7070?q=80&w=1200',
-    moreImages: [
-      'https://images.unsplash.com/photo-1517441530263-633008779ef3?q=80&w=1200',
-      'https://images.unsplash.com/photo-1549439602-43ebcb232811?q=80&w=1200'
-    ],
-    rating: 5.0,
-    reviews: [
-      { id: 'r3', userName: 'D. Njeri', rating: 5, comment: 'The cut is revolutionary.', date: 'FEB 15, 2026' },
-      { id: 'r4', userName: 'Alex_V', rating: 4, comment: 'Premium leather, slightly tight fit but looks incredible.', date: 'JAN 20, 2026' }
-    ]
-  },
-
-  // Hoodies
-  {
-    id: 'hood-1',
-    name: 'Shadow Box Hoodie',
-    price: 4500,
-    category: 'Hoodies',
-    badge: 'Best Seller',
-    description: '450GSM ultra-heavy cotton. Boxy fit, drop shoulder. Designed for the urban silhouette.',
-    image: 'https://images.unsplash.com/photo-1556821840-3a63f95609a7?q=80&w=1200',
-    secondaryImage: 'https://images.unsplash.com/photo-1556821896-0e104192b67d?q=80&w=1200',
-    isNew: true,
-    rating: 4.8,
-    reviews: [
-      { id: 'r5', userName: 'Mike_T', rating: 5, comment: 'Heaviest hoodie I own. Unreal quality.', date: 'MAY 02, 2026' }
-    ]
-  },
-  {
-    id: 'hood-2',
-    name: 'Neon Rebel Pullover',
-    price: 4200,
-    category: 'Hoodies',
-    description: 'Cyan glow screenprint on jet black base. Ribbed cuffs.',
-    image: 'https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?q=80&w=600&auto=format&fit=crop',
-    rating: 4.7
-  },
-  {
-    id: 'hood-3',
-    name: 'Acid Wash Archive',
-    price: 5200,
-    category: 'Hoodies',
-    badge: 'Vintage',
-    description: 'Hand-distressed finish. Every piece is unique.',
-    image: 'https://images.unsplash.com/photo-1620799140188-3b2a02fd9a77?q=80&w=600&auto=format&fit=crop',
-    rating: 4.9
-  },
-
-  // T-Shirts
-  {
-    id: 'tee-1',
-    name: 'Genesis Graphic Tee',
-    price: 2800,
-    category: 'T-Shirts',
-    badge: 'Signature',
-    description: '240GSM combed cotton with back puff-print.',
-    image: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?q=80&w=600&auto=format&fit=crop',
-    secondaryImage: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?q=80&w=600&auto=format&fit=crop',
-    isNew: true,
-    rating: 4.8
-  },
-  {
-    id: 'tee-2',
-    name: 'Minimal Logo Basic',
-    price: 2200,
-    category: 'T-Shirts',
-    description: 'Embroidered AMARU crest on heavy jersey.',
-    image: 'https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?q=80&w=600&auto=format&fit=crop',
-    rating: 4.6
-  },
-  {
-    id: 'tee-3',
-    name: 'Concrete Jungle Oversize',
-    price: 3200,
-    category: 'T-Shirts',
-    badge: 'Hot Drop',
-    description: 'Brutalist typography inspired by Nairobi architecture.',
-    image: 'https://images.unsplash.com/photo-1576566582418-d0f50ec437e6?q=80&w=600&auto=format&fit=crop',
-    rating: 4.7
-  },
-  {
-    id: 'tee-4',
-    name: 'Pharaoh Spirit Tee',
-    price: 2900,
-    category: 'T-Shirts',
-    description: 'Gold foil accents on charcoal grey.',
-    image: 'https://images.unsplash.com/photo-1562157873-818bc0726f68?q=80&w=600&auto=format&fit=crop',
-    rating: 4.8
-  },
-
-  // Outerwear
-  {
-    id: 'out-1',
-    name: 'Nightshade Bomber',
-    price: 8500,
-    category: 'Outerwear',
-    badge: 'Essential',
-    description: 'Water-resistant tech nylon with orange lining.',
-    image: 'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?q=80&w=600&auto=format&fit=crop',
-    rating: 4.9
-  },
-  {
-    id: 'out-2',
-    name: 'Campus Varsity 2.0',
-    price: 9200,
-    category: 'Outerwear',
-    badge: 'Popular',
-    description: 'Satin finish with quilted interior. University exclusive.',
-    image: 'https://images.unsplash.com/photo-1551028719-00167b16eac5?q=80&w=600&auto=format&fit=crop',
-    rating: 4.7
-  },
-  {
-    id: 'out-3',
-    name: 'Desert Storm Windbreaker',
-    price: 6800,
-    category: 'Outerwear',
-    description: 'Lightweight packable shell for unpredictable weather.',
-    image: 'https://images.unsplash.com/photo-1504191467641-083bc75373a7?q=80&w=600&auto=format&fit=crop',
-    rating: 4.6
-  },
-
-  // Bottoms
-  {
-    id: 'bot-1',
-    name: 'Archive Stacked Denim',
-    price: 6500,
-    category: 'Bottoms',
-    badge: 'New Fit',
-    description: '14oz Japanese selvedge. Extra length for stacking.',
-    image: 'https://images.unsplash.com/photo-1542272604-787c3835535d?q=80&w=600&auto=format&fit=crop',
-    rating: 4.9
-  },
-  {
-    id: 'bot-2',
-    name: 'Urban Cargo V3',
-    price: 5800,
-    category: 'Bottoms',
-    description: '8-pocket utility pants with velcro straps.',
-    image: 'https://images.unsplash.com/photo-1624371414361-e6e8ea01c1e6?q=80&w=600&auto=format&fit=crop',
-    rating: 4.5
-  },
-  {
-    id: 'bot-3',
-    name: 'Luxury Lounge Sweats',
-    price: 4500,
-    category: 'Bottoms',
-    badge: 'Comfort',
-    description: 'French terry with invisible zipper pockets.',
-    image: 'https://images.unsplash.com/photo-1580906853203-f493cea9ff28?q=80&w=600&auto=format&fit=crop',
-    rating: 4.8
-  },
-  {
-    id: 'bot-4',
-    name: 'Distressed Skinny',
-    price: 5200,
-    category: 'Bottoms',
-    description: 'Super-stretch black denim with hand-cut rips.',
-    image: 'https://images.unsplash.com/photo-1541099649105-f69ad21f3246?q=80&w=600&auto=format&fit=crop',
-    rating: 4.7
-  },
-
-  // Accessories
-  {
-    id: 'acc-1',
-    name: 'Nairobi Trucker Cap',
-    price: 1800,
-    category: 'Accessories',
-    badge: 'Classic',
-    description: '3D embroidered crest with mesh back.',
-    image: 'https://images.unsplash.com/photo-1588850567047-1845a9ee02f9?q=80&w=600&auto=format&fit=crop',
-    rating: 4.5
-  },
-  {
-    id: 'acc-2',
-    name: 'Signature Utility Bag',
-    price: 3500,
-    category: 'Accessories',
-    description: 'Cross-body nylon bag with metallic buckle.',
-    image: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?q=80&w=600&auto=format&fit=crop',
-    rating: 4.6
-  },
-  {
-    id: 'acc-3',
-    name: 'Iconic Bucket Hat',
-    price: 2200,
-    category: 'Accessories',
-    badge: 'Summer',
-    description: 'Reversible velvet and denim finish.',
-    image: 'https://images.unsplash.com/photo-1565839630761-e60932204ccb?q=80&w=600&auto=format&fit=crop',
-    rating: 4.3
-  },
-  {
-    id: 'acc-4',
-    name: 'Solar Shade V1',
-    price: 4800,
-    category: 'Accessories',
-    badge: 'Premium',
-    description: 'Acetate frame with polarized cyan lenses.',
-    image: 'https://images.unsplash.com/photo-1511499767390-91f99f73948c?q=80&w=600&auto=format&fit=crop',
-    rating: 4.8
-  }
-];
-
 const PROJECTS = [
   {
     id: 'p1',
@@ -370,7 +143,7 @@ const Footer = ({ onPageChange }: { onPageChange: (v: View) => void }) => {
       <div className="absolute bottom-0 right-0 w-96 h-96 bg-[#0096ff]/5 blur-[100px] pointer-events-none" />
       
       <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-16 mb-24">
-        {/* Brand Info */}
+        {/* Logo Section */}
         <div className="space-y-8">
           <button onClick={() => onPageChange('customer')} className="flex flex-col items-start gap-1 group">
             <span className={`text-4xl font-black bg-gradient-to-r ${BRAND_GRADIENT} bg-clip-text text-transparent tracking-[0.2em] leading-none transition-all group-hover:tracking-[0.25em] italic`}>
@@ -379,7 +152,7 @@ const Footer = ({ onPageChange }: { onPageChange: (v: View) => void }) => {
             <span className="text-[10px] uppercase font-black tracking-[0.4em] text-neutral-500">Exquisite $$ Embraced</span>
           </button>
           <p className="text-neutral-500 font-light leading-relaxed max-w-sm text-sm">
-            Revolutionary street luxury designed to empower identity and confidence. High-quality craftsmanship for those who define the culture.
+            Forging a new dimension of street luxury. AMARU is an archive of identity, designed for those who navigate the world with intentionality and grit.
           </p>
           <div className="flex gap-4">
             {[
@@ -470,15 +243,15 @@ const Footer = ({ onPageChange }: { onPageChange: (v: View) => void }) => {
   );
 };
 
-const Navbar = ({ onViewChange, currentView, onSearchOpen, wishlistCount }: { 
+const Navbar = ({ onViewChange, currentView, onSearchOpen, wishlistCount, onCartOpen }: { 
   onViewChange: (v: View) => void, 
   currentView: View,
   onSearchOpen: () => void,
-  wishlistCount: number
+  wishlistCount: number,
+  onCartOpen: () => void
 }) => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [theme, setTheme] = useState<'dark' | 'light'>('dark');
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
@@ -493,16 +266,6 @@ const Navbar = ({ onViewChange, currentView, onSearchOpen, wishlistCount }: {
     { id: 'contact', label: 'Contact' }
   ];
 
-  const toggleTheme = () => {
-    const newTheme = theme === 'dark' ? 'light' : 'dark';
-    setTheme(newTheme);
-    if (newTheme === 'light') {
-      document.documentElement.classList.add('light');
-    } else {
-      document.documentElement.classList.remove('light');
-    }
-  };
-
   return (
     <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
       isScrolled 
@@ -512,10 +275,10 @@ const Navbar = ({ onViewChange, currentView, onSearchOpen, wishlistCount }: {
       <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
         {/* Left Side: Brand Identity */}
         <button onClick={() => onViewChange('customer')} className="flex flex-col items-start gap-1 group">
-          <span className={`text-2xl font-black bg-gradient-to-r ${BRAND_GRADIENT} bg-clip-text text-transparent tracking-[0.2em] leading-none transition-all group-hover:tracking-[0.25em]`}>
+          <span className={`text-2xl font-black bg-gradient-to-r ${BRAND_GRADIENT} bg-clip-text text-transparent tracking-[0.25em] leading-none transition-all group-hover:tracking-[0.3em] group-hover:scale-[1.02] transform-gpu`}>
             AMARU
           </span>
-          <span className="text-[9px] uppercase font-black tracking-[0.4em] text-neutral-400">Exquisite $$ Embraced</span>
+          <span className="text-[9px] uppercase font-black tracking-[0.4em] text-neutral-400 opacity-60 group-hover:opacity-100 transition-opacity">Exquisite $$ Embraced</span>
         </button>
 
         {/* Center: Navigation */}
@@ -537,17 +300,19 @@ const Navbar = ({ onViewChange, currentView, onSearchOpen, wishlistCount }: {
         {/* Right Side: Utils */}
         <div className="flex items-center gap-3 md:gap-6">
           <button 
-            onClick={() => window.open('https://wa.me/254746746904', '_blank')}
-            className="hidden sm:flex items-center gap-2 bg-[#25D366]/10 text-[#25D366] px-5 py-2.5 rounded-full border border-[#25D366]/20 text-[9px] font-black uppercase tracking-widest hover:bg-[#25D366] hover:text-white transition-all shadow-lg active:scale-95"
+            onClick={() => onViewChange('wishlist')}
+            className={`relative p-2.5 rounded-full border transition-all ${currentView === 'wishlist' ? 'bg-[#0096ff] border-[#0096ff] text-white shadow-lg shadow-[#0096ff]/20' : 'bg-white/5 border-white/5 text-neutral-400 hover:text-white hover:bg-white/10'}`}
           >
-            <MessageCircle size={14} /> WhatsApp
-          </button>
-          
-          <button 
-            onClick={toggleTheme}
-            className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-neutral-800 transition-all text-neutral-400 hover:text-white border border-white/5"
-          >
-            {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+            <Heart size={18} fill={currentView === 'wishlist' ? "currentColor" : "none"} />
+            {wishlistCount > 0 && (
+              <motion.span 
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                className="absolute -top-1 -right-1 bg-white text-black text-[8px] font-black w-4 h-4 rounded-full flex items-center justify-center border border-[#0096ff]"
+              >
+                {wishlistCount}
+              </motion.span>
+            )}
           </button>
 
           <button 
@@ -555,6 +320,13 @@ const Navbar = ({ onViewChange, currentView, onSearchOpen, wishlistCount }: {
             className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-neutral-800 transition-all text-neutral-400 hover:text-white border border-white/5"
           >
             <Search size={18} />
+          </button>
+
+          <button 
+            onClick={onCartOpen}
+            className="hidden md:flex w-10 h-10 rounded-full items-center justify-center bg-white/5 border border-white/5 text-neutral-400 hover:text-white transition-all relative"
+          >
+            <ShoppingBag size={18} />
           </button>
           
           <button 
@@ -712,22 +484,35 @@ const LoginView = ({ onLogin }: { onLogin: (role: 'customer' | 'admin') => void,
   );
 };
 
+const SkeletonCard = () => (
+  <div className="flex flex-col animate-pulse">
+    <div className="aspect-[3/4] md:aspect-[4/5] bg-neutral-900 rounded-[1.5rem] md:rounded-[2.5rem] border border-neutral-800" />
+    <div className="px-2 pt-6 flex flex-col gap-3">
+       <div className="h-4 bg-neutral-900 rounded-full w-1/3" />
+       <div className="h-6 bg-neutral-900 rounded-lg w-2/3" />
+       <div className="h-8 bg-neutral-900 rounded-lg w-full" />
+    </div>
+  </div>
+);
+
 const QuickViewModal = ({ 
   product, 
   isOpen, 
   onClose, 
   onAdd, 
   onToggleWishlist, 
-  isWishlisted 
+  isWishlisted,
+  isLoading
 }: { 
   product: Product | null, 
   isOpen: boolean, 
   onClose: () => void, 
   onAdd: (p: Product) => void,
   onToggleWishlist: (id: string) => void,
-  isWishlisted: boolean
+  isWishlisted: boolean,
+  isLoading?: boolean
 }) => {
-  if (!product) return null;
+  if (!product && !isLoading) return null;
 
   return (
     <AnimatePresence>
@@ -750,67 +535,93 @@ const QuickViewModal = ({
               <X size={24} />
             </button>
 
-            <div className="grid lg:grid-cols-2 gap-12 md:gap-20 p-8 md:p-20">
-              <div className="space-y-6">
-                 <div className="aspect-[4/5] rounded-[2rem] overflow-hidden border border-neutral-800 p-1 bg-neutral-900 group">
-                    <img src={product.image} alt={product.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
-                 </div>
-                 <div className="grid grid-cols-4 gap-4">
-                    {[product.image, product.secondaryImage, ...(product.moreImages || [])].filter(Boolean).slice(0, 4).map((img, i) => (
-                      <div key={i} className="aspect-square rounded-xl overflow-hidden border border-neutral-800 bg-neutral-900 cursor-pointer hover:border-[#0096ff] transition-all">
-                        <img src={img} alt="" className="w-full h-full object-cover opacity-60 hover:opacity-100 transition-opacity" />
-                      </div>
-                    ))}
-                 </div>
-              </div>
-
-              <div className="flex flex-col">
-                <div className="flex justify-between items-start mb-6">
-                  <div>
-                    <div className="micro-label mb-4 text-[#0096ff]">{product.category}</div>
-                    <h2 className="text-4xl md:text-6xl font-black uppercase italic tracking-tighter leading-none mb-4">{product.name}</h2>
-                  </div>
-                  <button 
-                    onClick={() => onToggleWishlist(product.id)}
-                    className={`p-5 rounded-full backdrop-blur-xl border border-white/5 transition-all
-                      ${isWishlisted ? 'bg-[#0096ff] text-white shadow-lg' : 'bg-black/40 text-white hover:scale-110 hover:bg-neutral-800'}`}
-                  >
-                    <Heart size={20} fill={isWishlisted ? "currentColor" : "none"} strokeWidth={isWishlisted ? 0 : 2} />
-                  </button>
+            {isLoading ? (
+              <div className="grid lg:grid-cols-2 gap-12 md:gap-20 p-8 md:p-20 animate-pulse">
+                <div className="aspect-[4/5] bg-neutral-900 rounded-[2rem]" />
+                <div className="space-y-8">
+                  <div className="h-4 bg-neutral-900 w-24 rounded-full" />
+                  <div className="h-20 bg-neutral-900 w-full rounded-2xl" />
+                  <div className="h-12 bg-neutral-900 w-48 rounded-2xl" />
+                  <div className="h-32 bg-neutral-900 w-full rounded-3xl" />
                 </div>
-
-                <div className="flex items-center gap-6 mb-12">
-                   <div className="text-4xl font-black italic tracking-tighter uppercase whitespace-nowrap">Ksh {product.price.toLocaleString()}</div>
-                   <div className="flex items-center gap-2 bg-white/5 px-4 py-2 rounded-full border border-white/5">
-                      <Star size={16} className="text-yellow-400" fill="currentColor" />
-                      <span className="text-sm font-black">{product.rating || '4.8'}</span>
-                      <span className="text-[10px] text-neutral-500 font-bold uppercase tracking-widest ml-2">{product.reviews?.length || '12'} Reviews</span>
+              </div>
+            ) : product && (
+              <div className="grid lg:grid-cols-2 gap-12 md:gap-20 p-8 md:p-20">
+                <div className="space-y-6">
+                 <motion.div 
+                    initial={{ y: 20, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    className="aspect-[4/5] rounded-[2rem] overflow-hidden border border-neutral-800 p-1 bg-neutral-900 group relative"
+                   >
+                      <motion.img 
+                        src={product.image} 
+                        alt={product.name} 
+                        className="w-full h-full object-cover transition-transform duration-700" 
+                        whileHover={{ scale: 1.1, y: -10 }}
+                        transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent pointer-events-none" />
+                   </motion.div>
+                   <div className="grid grid-cols-4 gap-4">
+                      {[product.image, product.secondaryImage, ...(product.moreImages || [])].filter(Boolean).slice(0, 4).map((img, i) => (
+                        <div key={i} className="aspect-square rounded-xl overflow-hidden border border-neutral-800 bg-neutral-900 cursor-pointer hover:border-[#0096ff] transition-all group">
+                          <img src={img} alt="" className="w-full h-full object-cover opacity-60 group-hover:opacity-100 group-hover:scale-110 transition-all" />
+                        </div>
+                      ))}
                    </div>
                 </div>
 
-                <p className="text-neutral-500 text-lg leading-relaxed font-light mb-12">
-                  {product.description}
-                </p>
-
-                <div className="space-y-4 mb-20">
-                  <div className="micro-label opacity-40">Identity Dimensions</div>
-                  <div className="flex gap-4">
-                    {['S', 'M', 'L', 'XL'].map(s => (
-                      <button key={s} className="w-16 h-16 rounded-2xl border border-neutral-800 hover:border-[#0096ff] transition-all font-black text-xs hover:text-white text-neutral-600">
-                        {s}
-                      </button>
-                    ))}
+                <div className="flex flex-col">
+                  <div className="flex justify-between items-start mb-6">
+                    <div>
+                      <div className="micro-label mb-4 text-[#0096ff]">{product.category}</div>
+                      <h2 className="text-4xl md:text-6xl font-black uppercase italic tracking-tighter leading-none mb-4">{product.name}</h2>
+                    </div>
+                    <button 
+                      onClick={() => onToggleWishlist(product.id)}
+                      className={`p-5 rounded-full backdrop-blur-xl border border-white/5 transition-all
+                        ${isWishlisted ? 'bg-[#0096ff] text-white shadow-lg' : 'bg-black/40 text-white hover:scale-110 hover:bg-neutral-800'}`}
+                    >
+                      <Heart size={20} fill={isWishlisted ? "currentColor" : "none"} strokeWidth={isWishlisted ? 0 : 2} />
+                    </button>
                   </div>
-                </div>
 
-                <button 
-                  onClick={() => { onAdd(product); onClose(); }}
-                  className="bg-white text-black py-6 rounded-[2rem] font-black uppercase text-[10px] tracking-[0.4em] hover:bg-[#0096ff] hover:text-white transition-all shadow-2xl shadow-[#0096ff]/20 flex items-center justify-center gap-4 active:scale-95 mt-auto"
-                >
-                  Acquire Specimen <ShoppingBag size={18} />
-                </button>
+                  <div className="flex items-center gap-6 mb-12">
+                     <div className="text-4xl font-black italic tracking-tighter uppercase whitespace-nowrap">Ksh {product.price.toLocaleString()}</div>
+                     <div className="flex items-center gap-2 bg-white/5 px-4 py-2 rounded-full border border-white/5">
+                        <Star size={16} className="text-yellow-400" fill="currentColor" />
+                        <span className="text-sm font-black">{product.rating || '4.8'}</span>
+                        <span className="text-[10px] text-neutral-500 font-bold uppercase tracking-widest ml-2">{typeof product.reviews === 'number' ? product.reviews : (product.reviews?.length || '12')} Reviews</span>
+                     </div>
+                  </div>
+
+                  <p className="text-neutral-500 text-lg leading-relaxed font-light mb-12">
+                    {product.description}
+                  </p>
+
+                  <div className="space-y-4 mb-20">
+                    <div className="flex justify-between">
+                       <div className="micro-label opacity-40 uppercase tracking-widest">Dimensions of identity</div>
+                       <button className="text-[8px] font-black uppercase text-[#0096ff] tracking-widest">Sizing Guide</button>
+                    </div>
+                    <div className="flex flex-wrap gap-4">
+                      {['S', 'M', 'L', 'XL', 'XXL'].map(s => (
+                        <button key={s} className="w-16 h-16 rounded-2xl border border-neutral-800 hover:border-[#0096ff] transition-all font-black text-xs hover:text-white text-neutral-600 flex items-center justify-center hover:bg-[#0096ff]/5">
+                          {s}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <button 
+                    onClick={() => { onAdd(product); onClose(); }}
+                    className="bg-white text-black py-6 rounded-[2rem] font-black uppercase text-[10px] tracking-[0.4em] hover:bg-[#0096ff] hover:text-white transition-all shadow-2xl shadow-[#0096ff]/20 flex items-center justify-center gap-4 active:scale-95 mt-auto"
+                  >
+                    Acquire for Archive <ShoppingBag size={18} />
+                  </button>
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Review Section */}
             <div className="border-t border-neutral-800 p-8 md:p-20 bg-neutral-900/30">
@@ -936,7 +747,7 @@ const ProjectsView = () => {
   );
 };
 
-const WishlistView = ({ products, onAdd, onToggleWishlist, onQuickView }: { products: Product[], onAdd: (p: Product) => void, onToggleWishlist: (id: string) => void, onQuickView: (p: Product) => void }) => {
+const WishlistView = ({ products, onAdd, onToggleWishlist, onQuickView, onPageChange }: { products: Product[], onAdd: (p: Product) => void, onToggleWishlist: (id: string) => void, onQuickView: (p: Product) => void, onPageChange: (v: View) => void }) => {
   return (
     <section className="pt-32 md:pt-48 pb-20 md:pb-32 px-4 md:px-6 min-h-screen">
       <div className="max-w-7xl mx-auto text-center md:text-left">
@@ -944,16 +755,22 @@ const WishlistView = ({ products, onAdd, onToggleWishlist, onQuickView }: { prod
         <h1 className="text-5xl md:text-8xl font-black mb-20 uppercase italic tracking-tighter">YOUR <span className="text-gradient">VAULT</span></h1>
         
         {products.length === 0 ? (
-          <div className="py-20 text-center">
-            <div className="w-24 h-24 rounded-full bg-neutral-900 border border-neutral-800 flex items-center justify-center mx-auto mb-8 shadow-inner">
-               <Heart size={40} className="text-neutral-700 animate-pulse" />
-            </div>
-            <p className="text-xl font-light uppercase tracking-widest text-neutral-500 mb-8 max-w-xs mx-auto">Your collection vault is currently empty.</p>
-            <button 
-              onClick={() => window.location.href = '#shop'} 
-              className="text-[10px] font-black uppercase tracking-[0.4em] text-[#0096ff] hover:text-white border border-[#0096ff]/30 px-8 py-4 rounded-full transition-all"
+          <div className="py-20 text-center flex flex-col items-center">
+            <motion.div 
+               animate={{ y: [0, -10, 0] }}
+               transition={{ repeat: Infinity, duration: 3 }}
+               className="w-32 h-32 rounded-full bg-neutral-900 border border-neutral-800 flex items-center justify-center mb-10 shadow-2xl relative"
             >
-              Explore Shop
+               <div className="absolute inset-0 bg-[#0096ff]/10 blur-xl rounded-full" />
+               <Heart size={48} className="text-[#0096ff] relative z-10" fill="currentColor" />
+            </motion.div>
+            <h2 className="text-3xl font-black uppercase italic tracking-tighter mb-4 text-white">Your Vault is Silent</h2>
+            <p className="text-sm font-medium uppercase tracking-[0.2em] text-neutral-500 mb-10 max-w-xs mx-auto leading-loose">The archives are awaiting your selection. Start collecting pieces that define your identity.</p>
+            <button 
+              onClick={() => onPageChange('shop')} 
+              className="bg-white text-black text-[10px] font-black uppercase tracking-[0.4em] px-12 py-5 rounded-full hover:bg-[#0096ff] hover:text-white transition-all shadow-2xl shadow-[#0096ff]/20 flex items-center gap-4"
+            >
+              Start Curating <ArrowRight size={16} />
             </button>
           </div>
         ) : (
@@ -1017,43 +834,56 @@ const CartDrawer = ({
                </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-8 space-y-6">
+            <div className="flex-1 overflow-y-auto p-8 space-y-6 scrollbar-hide">
               {items.length === 0 ? (
-                <div className="h-full flex flex-col items-center justify-center text-center">
-                  <div className="w-20 h-20 rounded-full bg-neutral-900 border border-neutral-800 flex items-center justify-center mb-8 shadow-inner">
-                     <ShoppingBag size={32} className="text-neutral-700 animate-pulse" />
-                  </div>
-                  <p className="text-xl font-light uppercase tracking-widest text-neutral-500 mb-8 max-w-[200px]">Your archive is silent.</p>
+                <div className="h-full flex flex-col items-center justify-center text-center p-8">
+                  <motion.div 
+                    animate={{ rotate: [0, 5, -5, 0] }}
+                    transition={{ repeat: Infinity, duration: 4 }}
+                    className="w-24 h-24 rounded-full bg-neutral-800/50 border border-neutral-700 flex items-center justify-center mb-10 shadow-2xl relative"
+                  >
+                     <ShoppingBag size={40} className="text-neutral-500" />
+                  </motion.div>
+                  <h3 className="text-2xl font-black uppercase italic tracking-tighter mb-4">Bag Empty</h3>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-neutral-500 mb-10 leading-loose">Revolutionary streetwear is just a click away. Don't leave your archive incomplete.</p>
                   <button 
                     onClick={onClose} 
-                    className="text-[10px] font-black uppercase tracking-[0.4em] text-[#0096ff] hover:text-white border border-[#0096ff]/30 px-8 py-4 rounded-full transition-all"
+                    className="bg-white text-black text-[10px] font-black uppercase tracking-[0.4em] px-12 py-5 rounded-full hover:bg-[#0096ff] hover:text-white transition-all shadow-xl w-full"
                   >
-                    Scout Drops
+                    View Drops
                   </button>
                 </div>
               ) : (
                 items.map(item => (
-                  <div key={item.id} className="flex gap-4 group">
-                    <img src={item.image} className="w-24 h-32 object-cover rounded-2xl border border-neutral-800" alt="" />
+                  <div key={item.id} className="flex gap-6 group">
+                    <img src={item.image} className="w-24 h-32 object-cover rounded-2xl border border-neutral-800 group-hover:border-[#0096ff]/50 transition-colors" alt="" />
                     <div className="flex-1 flex flex-col justify-between py-1">
                       <div>
-                        <h4 className="font-black uppercase text-xs tracking-tight mb-1">{item.name}</h4>
-                        <div className="text-[10px] text-[#0096ff] font-bold uppercase tracking-widest">Ksh {item.price.toLocaleString()}</div>
+                        <h4 className="font-black uppercase text-xs tracking-tight mb-1 group-hover:text-[#0096ff] transition-colors">{item.name}</h4>
+                        <div className="text-[10px] text-neutral-500 font-bold uppercase tracking-widest">Ksh {item.price.toLocaleString()}</div>
                       </div>
-                      <div className="flex items-center gap-4">
-                        <button 
-                          onClick={() => onUpdateQty(item.id, -1)}
-                          className="w-10 h-10 rounded-xl border border-neutral-800 flex items-center justify-center hover:bg-white/5"
-                        >
-                          <ArrowRight size={14} className="rotate-180" />
-                        </button>
-                        <span className="font-black text-xs">{item.quantity}</span>
-                        <button 
-                          onClick={() => onUpdateQty(item.id, 1)}
-                          className="w-10 h-10 rounded-xl border border-neutral-800 flex items-center justify-center hover:bg-white/5"
-                        >
-                          <Plus size={14} />
-                        </button>
+                      <div className="flex items-center justify-between">
+                         <div className="flex items-center gap-4">
+                            <button 
+                              onClick={() => onUpdateQty(item.id, -1)}
+                              className="w-10 h-10 rounded-xl border border-neutral-800 flex items-center justify-center hover:bg-white/5 transition-all active:scale-90"
+                            >
+                              <ArrowRight size={14} className="rotate-180" />
+                            </button>
+                            <span className="font-black text-xs w-4 text-center">{item.quantity}</span>
+                            <button 
+                              onClick={() => onUpdateQty(item.id, 1)}
+                              className="w-10 h-10 rounded-xl border border-neutral-800 flex items-center justify-center hover:bg-white/5 transition-all active:scale-90"
+                            >
+                              <Plus size={14} />
+                            </button>
+                         </div>
+                         <button 
+                          onClick={() => onUpdateQty(item.id, -item.quantity)}
+                          className="text-[8px] text-neutral-800 hover:text-red-500 font-black uppercase tracking-widest transition-colors"
+                         >
+                           Remove
+                         </button>
                       </div>
                     </div>
                   </div>
@@ -1103,11 +933,11 @@ const ProductCard = ({
       whileHover={{ y: -10 }}
       className="group relative flex flex-col"
     >
-      <div className="aspect-[3/4] md:aspect-[4/5] overflow-hidden relative rounded-[1.5rem] md:rounded-[2.5rem] bg-neutral-900 border border-neutral-800 transition-all duration-700 group-hover:border-[#0096ff]/50 group-hover:shadow-[0_0_30px_rgba(0,150,255,0.15)]">
+      <div className="aspect-[3/4] md:aspect-[4/5] overflow-hidden relative rounded-[1.5rem] md:rounded-[2.5rem] bg-neutral-900 border border-neutral-800 transition-all duration-700 glow-hover cursor-pointer" onClick={() => onQuickView?.(product)}>
         <img 
           src={product.image} 
           alt={product.name}
-          className={`w-full h-full object-cover transition-all duration-1000 ${product.secondaryImage ? 'group-hover:opacity-0' : 'group-hover:scale-110'}`}
+          className={`w-full h-full object-cover transition-all duration-1000 group-hover:scale-110 ${product.secondaryImage ? 'group-hover:opacity-0' : ''}`}
           referrerPolicy="no-referrer"
         />
         {product.secondaryImage && (
@@ -1131,14 +961,24 @@ const ProductCard = ({
           <Heart size={16} fill={isWishlisted ? "currentColor" : "none"} strokeWidth={isWishlisted ? 0 : 2} />
         </button>
 
-        {product.badge && (
-          <span className={`absolute top-4 left-4 md:top-8 md:left-8 px-4 py-2 rounded-full text-[9px] font-black uppercase tracking-[0.2em] shadow-lg backdrop-blur-xl border border-white/10 z-10 
-            ${product.badge === 'Grail' ? 'bg-yellow-500 text-black border-yellow-400 font-black' : 'bg-black/80 text-white'}`}>
-            {product.badge === 'Grail' ? (
-              <span className="flex items-center gap-2 font-black"><Star size={10} fill="currentColor" /> {product.badge}</span>
-            ) : product.badge}
-          </span>
-        )}
+        <div className="absolute top-4 left-4 md:top-6 md:left-6 flex flex-col gap-2 z-10">
+          {product.badge && (
+            <span className={`px-4 py-2 rounded-xl text-[8px] font-black uppercase tracking-[0.2em] shadow-2xl backdrop-blur-2xl border border-white/10 
+              ${product.badge === 'Grail' ? 'bg-yellow-500 text-black border-yellow-400' : 'bg-[#0096ff] text-white shadow-[#0096ff]/20'}`}>
+              {product.badge}
+            </span>
+          )}
+          {product.campusPickup && (
+            <span className="px-3 py-1.5 rounded-xl bg-black/80 text-white text-[7px] font-black uppercase tracking-[0.2em] border border-white/5 shadow-2xl backdrop-blur-xl flex items-center gap-2">
+              <div className="w-1.5 h-1.5 rounded-full bg-[#0096ff] animate-pulse" /> Campus Hub
+            </span>
+          )}
+          {product.price < 1000 && (
+            <span className="px-3 py-1.5 rounded-xl bg-emerald-500/90 text-white text-[7px] font-black uppercase tracking-[0.2em] border border-white/5 shadow-2xl backdrop-blur-xl flex items-center gap-2">
+              <Zap size={8} fill="currentColor" /> Under 1K
+            </span>
+          )}
+        </div>
 
         <div className="absolute inset-x-4 bottom-4 md:inset-x-8 md:bottom-8 translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500 flex flex-col gap-2">
           {onQuickView && (
@@ -1146,7 +986,7 @@ const ProductCard = ({
               className="w-full bg-white/10 backdrop-blur-xl text-white py-4 rounded-xl font-black text-[9px] uppercase tracking-[0.4em] flex items-center justify-center gap-3 hover:bg-white/20 transition-all border border-white/10"
               onClick={() => onQuickView(product)}
             >
-              Quick Perspective <ExternalLink size={14} />
+              Quick View <ExternalLink size={14} />
             </button>
           )}
           <button 
@@ -1166,13 +1006,21 @@ const ProductCard = ({
               <span className="text-[10px] font-black">{product.rating || '4.5'}</span>
            </div>
         </div>
-        <h3 className="font-bold text-sm md:text-md mb-2 tracking-tight group-hover:text-[#0096ff] transition-colors uppercase">{product.name}</h3>
-        <div className="flex justify-between items-baseline">
-          <span className="text-xl font-black italic">Ksh {product.price.toLocaleString()}</span>
-          {product.isNew && (
-            <span className="text-[9px] font-black text-[#0096ff] uppercase tracking-widest">New Arrival</span>
+        <h3 className="font-bold text-sm md:text-md mb-2 tracking-tight group-hover:text-[#0096ff] transition-colors uppercase h-5 overflow-hidden">{product.name}</h3>
+        <div className="flex justify-between items-baseline mb-3">
+          <div className="flex flex-col">
+            <span className="text-2xl font-black italic tracking-tighter text-white">Ksh {Math.floor(product.price).toLocaleString()}</span>
+            <span className="text-[8px] font-bold text-neutral-600 uppercase tracking-[0.2em]">{product.stockCount ? `${product.stockCount} Pieces Available` : 'Ready to Ship'}</span>
+          </div>
+          {(product.isNew || product.badge === 'NEW') && (
+            <span className="text-[9px] font-black text-[#0096ff] uppercase tracking-widest border-b border-[#0096ff]/30 pb-0.5">Fresh In</span>
           )}
         </div>
+        {product.stockCount && product.stockCount < 10 && (
+          <div className="text-[10px] font-black text-orange-500 uppercase tracking-widest flex items-center gap-2">
+            <Clock size={10} /> Low Inventory
+          </div>
+        )}
       </div>
     </motion.div>
   );
@@ -1180,13 +1028,14 @@ const ProductCard = ({
 
 // --- Page Views ---
 
-const HomeView = ({ onPageChange, onCategoryChange, onAdd, onToggleWishlist, wishlist, onQuickView }: { 
+const HomeView = ({ onPageChange, onCategoryChange, onAdd, onToggleWishlist, wishlist, onQuickView, products }: { 
   onPageChange: (v: View) => void, 
   onCategoryChange: (c: string) => void,
   onAdd: (p: Product) => void,
   onToggleWishlist: (id: string) => void,
   wishlist: string[],
-  onQuickView: (p: Product) => void
+  onQuickView: (p: Product) => void,
+  products: Product[]
 }) => {
   return (
     <>
@@ -1290,7 +1139,7 @@ const HomeView = ({ onPageChange, onCategoryChange, onAdd, onToggleWishlist, wis
             </button>
           </div>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 md:gap-12">
-            {SAMPLE_PRODUCTS.slice(0, 4).map(product => (
+            {products.slice(0, 4).map(product => (
               <ProductCard 
                 key={product.id} 
                 product={product} 
@@ -1343,10 +1192,10 @@ const HomeView = ({ onPageChange, onCategoryChange, onAdd, onToggleWishlist, wis
           <div className="micro-label mb-8 md:mb-12 text-center text-gradient">The Collection Types</div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
             {[
-              { icon: <Shirt size={28} />, name: 'T-Shirts' },
-              { icon: <Package size={28} />, name: 'Hoodies' },
-              { icon: <Crown size={28} />, name: 'Jackets' },
-              { icon: <Sparkles size={28} />, name: 'Jeans' },
+              { icon: <Plus size={28} />, name: 'CAMPUS ESSENTIALS' },
+              { icon: <Package size={28} />, name: 'SWEATSHIRTS' },
+              { icon: <Shirt size={28} />, name: 'SHIRTS' },
+              { icon: <LayoutGrid size={28} />, name: 'JEANS' },
             ].map((cat, i) => (
               <motion.div 
                 key={i}
@@ -1398,7 +1247,12 @@ const ShopView = ({
   setActiveCategory, 
   onToggleWishlist, 
   wishlist,
-  onQuickView
+  onQuickView,
+  sortOrder,
+  setSortOrder,
+  priceRange,
+  setPriceRange,
+  isLoading
 }: { 
   products: Product[], 
   onAdd: (p: Product) => void,
@@ -1406,27 +1260,78 @@ const ShopView = ({
   setActiveCategory: (c: string) => void,
   onToggleWishlist: (id: string) => void,
   wishlist: string[],
-  onQuickView: (p: Product) => void
+  onQuickView: (p: Product) => void,
+  sortOrder: string,
+  setSortOrder: (s: string) => void,
+  priceRange: [number, number],
+  setPriceRange: (r: [number, number]) => void,
+  isLoading: boolean
 }) => {
-  const categories = ['All Drops', 'Signature', 'Hoodies', 'T-Shirts', 'Outerwear', 'Bottoms', 'Accessories'];
+  const categories = SITE_CATEGORIES;
 
   return (
     <section className="pt-32 md:pt-48 pb-20 md:pb-32 px-4 md:px-6 min-h-screen">
       <div className="max-w-7xl mx-auto">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 md:mb-20 gap-8">
-          <div>
-            <div className="micro-label mb-4 opacity-50">Retail Space</div>
-            <h1 className="text-5xl md:text-8xl font-black uppercase tracking-tighter italic leading-none">
-              THE <span className="text-gradient">CATALOG</span>
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-16 md:mb-24 gap-8">
+          <div className="relative">
+            <div className="micro-label mb-4 text-[#0096ff] flex items-center gap-2">
+              <Zap size={10} fill="currentColor" /> Verified Retail Partner
+            </div>
+            <h1 className="text-6xl md:text-[10rem] font-black uppercase tracking-tighter italic leading-[0.8] mb-8">
+              THE <span className="text-gradient hover:animate-pulse transition-all">CATALOG</span>
             </h1>
+            
+            <div className="flex flex-wrap gap-4 items-center mb-8">
+               <div className="flex bg-neutral-900 rounded-2xl p-1.5 border border-white/5">
+                 {['Grid', 'Focus'].map(m => (
+                    <button key={m} className={`px-4 py-2 rounded-xl text-[8px] font-black uppercase tracking-widest ${m === 'Grid' ? 'bg-white text-black' : 'text-neutral-500'}`}>{m}</button>
+                 ))}
+               </div>
+               <div className="h-4 w-px bg-white/10" />
+               <div className="flex items-center gap-2">
+                  <span className="text-[8px] font-black uppercase text-neutral-600 tracking-widest">Pricing:</span>
+                  <select 
+                    value={`${priceRange[0]}-${priceRange[1]}`} 
+                    onChange={(e) => {
+                      const [min, max] = e.target.value.split('-').map(Number);
+                      setPriceRange([min, max]);
+                    }}
+                    className="bg-transparent text-[9px] font-black uppercase tracking-widest outline-none text-[#0096ff] cursor-pointer"
+                  >
+                    <option value="0-10000" className="bg-black">All Segments</option>
+                    <option value="0-1000" className="bg-black">Under 1K</option>
+                    <option value="1000-2000" className="bg-black">1K - 2K</option>
+                    <option value="2000-10000" className="bg-black">Premium Range</option>
+                  </select>
+               </div>
+               <div className="h-4 w-px bg-white/10" />
+               <div className="flex items-center gap-2">
+                  <span className="text-[8px] font-black uppercase text-neutral-600 tracking-widest">Sort:</span>
+                  <select 
+                    value={sortOrder}
+                    onChange={(e) => setSortOrder(e.target.value)}
+                    className="bg-transparent text-[9px] font-black uppercase tracking-widest outline-none text-[#0096ff] cursor-pointer"
+                  >
+                    <option value="pop" className="bg-black">Popularity</option>
+                    <option value="low" className="bg-black">Budget (Low)</option>
+                    <option value="high" className="bg-black">Elite (High)</option>
+                    <option value="alpha" className="bg-black">A - Z</option>
+                  </select>
+               </div>
+            </div>
+
+            <p className="text-neutral-500 font-light max-w-lg uppercase tracking-widest text-[10px] leading-relaxed">
+              Serving the elite student body of Nairobi. 
+              Interactive fragments curated for identity and status.
+            </p>
           </div>
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-wrap gap-2 md:gap-3 bg-neutral-900/50 p-2 md:p-3 rounded-3xl border border-white/5 backdrop-blur-xl">
             {categories.map(cat => (
               <button 
                 key={cat}
                 onClick={() => setActiveCategory(cat)}
-                className={`px-6 py-3 rounded-full text-[9px] font-black uppercase tracking-widest transition-all
-                  ${activeCategory === cat ? 'bg-[#0096ff] text-white shadow-lg shadow-[#0096ff]/30' : 'bg-neutral-900 text-neutral-500 hover:text-white border border-neutral-800'}`}
+                className={`px-6 py-4 rounded-2xl text-[9px] font-black uppercase tracking-widest transition-all
+                  ${activeCategory === cat ? 'bg-white text-black shadow-2xl' : 'text-neutral-500 hover:text-white'}`}
               >
                 {cat}
               </button>
@@ -1434,12 +1339,20 @@ const ShopView = ({
           </div>
         </div>
         
-        {products.length === 0 ? (
-          <div className="py-40 text-center opacity-20">
-            <h2 className="text-2xl font-black uppercase tracking-[0.3em]">No Fragments Found</h2>
+        {isLoading ? (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-12 md:gap-x-12 md:gap-y-20 relative">
+            {[1,2,3,4,5,6,7,8].map(i => <SkeletonCard key={i} />)}
+          </div>
+        ) : products.length === 0 ? (
+          <div className="py-60 text-center relative">
+            <div className="absolute inset-0 bg-gradient-radial from-[#0096ff]/5 to-transparent blur-3xl pointer-events-none" />
+            <h2 className="text-2xl font-black uppercase tracking-[0.5em] text-neutral-700">Stock Depleted</h2>
+            <p className="mt-4 text-neutral-500 font-light uppercase text-[10px] tracking-widest">Check back shortly for new drops.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-12 md:gap-x-12 md:gap-y-20">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-12 md:gap-x-12 md:gap-y-20 relative">
+             {/* Abstract Grid Elements */}
+             <div className="absolute top-0 right-[-10%] w-64 h-64 bg-[#0096ff]/5 blur-3xl rounded-full pointer-events-none" />
             {products.map((product) => (
               <ProductCard 
                 key={product.id} 
@@ -1500,20 +1413,17 @@ const AboutView = ({ onPageChange }: { onPageChange: (v: View) => void }) => {
       <section className="py-24 md:py-48 px-6 bg-black">
         <div className="max-w-4xl mx-auto">
           <div className="flex flex-col gap-12 text-center md:text-left">
-            <div className="micro-label text-[#0096ff]">Legacy</div>
-            <h2 className="text-5xl md:text-8xl font-black italic tracking-tighter uppercase leading-none">Our Story</h2>
+            <div className="micro-label text-[#0096ff]">Origins</div>
+            <h2 className="text-5xl md:text-8xl font-black italic tracking-tighter uppercase leading-none">The Genesis</h2>
             <div className="space-y-8 text-neutral-400 text-xl md:text-2xl font-light leading-relaxed">
               <p>
-                AMARU was created for individuals who refuse to blend in. 
-                We believe clothing is more than fabric — it is identity, confidence, and expression.
+                AMARU is forged in the fire of urban creativity. We began as a rejection of the ordinary—a pursuit of a silhouette that speaks before you do.
               </p>
               <p>
-                From our first design to every collection we release, our mission has remained the same: 
-                to deliver bold, stylish, and high-quality apparel that empowers people to own their attitude and embrace their uniqueness.
+                We believe that every thread is a choice, and every design is a statement of intent. Our archive is built for those who navigate the concrete jungle with both grit and grace.
               </p>
               <p>
-                AMARU represents strength, creativity, and self-expression. 
-                Every piece we create is designed to help you stand out, feel confident, and express your personality.
+                This isn't just apparel. It's an armor of confidence, a texture of rebellion, and a blueprint for the modern soul.
               </p>
             </div>
           </div>
@@ -1543,15 +1453,15 @@ const AboutView = ({ onPageChange }: { onPageChange: (v: View) => void }) => {
       {/* SECTION 5 — OUR VALUES */}
       <section className="py-32 px-6">
         <div className="max-w-7xl mx-auto text-center mb-24">
-          <div className="micro-label mb-6 text-[#0096ff]">Foundation</div>
-          <h2 className="text-4xl md:text-6xl font-black uppercase italic tracking-tighter">What We Stand For</h2>
+          <div className="micro-label mb-6 text-[#0096ff]">Core Principles</div>
+          <h2 className="text-4xl md:text-6xl font-black uppercase italic tracking-tighter">The AMARU Standard</h2>
         </div>
         <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
            {[
-             { title: "Quality", desc: "We use durable materials and modern design standards.", icon: <ShieldCheck size={32} /> },
-             { title: "Creativity", desc: "We embrace originality and innovation in fashion.", icon: <Zap size={32} /> },
-             { title: "Customer Satisfaction", desc: "We prioritize customer happiness and trust.", icon: <Heart size={32} /> },
-             { title: "Confidence", desc: "We empower people to express themselves boldly.", icon: <Award size={32} /> }
+             { title: "INTEGRITY", desc: "Durable textiles curated for the long-form journey.", icon: <ShieldCheck size={32} /> },
+             { title: "VISION", desc: "Constant evolution. Innovative silhouettes that lead.", icon: <Zap size={32} /> },
+             { title: "COMMUNITY", desc: "A shared identity built on trust and mutual respect.", icon: <Heart size={32} /> },
+             { title: "INTENT", desc: "Every detail serves a purpose. No filler, only essence.", icon: <Award size={32} /> }
            ].map((v, i) => (
              <div key={i} className="bg-neutral-900/40 p-12 rounded-[2.5rem] border border-white/5 hover:border-[#0096ff]/40 transition-all group text-center">
                 <div className="text-[#0096ff] mb-8 flex justify-center group-hover:scale-110 transition-transform">{v.icon}</div>
@@ -1565,17 +1475,17 @@ const AboutView = ({ onPageChange }: { onPageChange: (v: View) => void }) => {
       {/* SECTION 6 — WHY CHOOSE AMARU */}
       <section className="py-32 px-6 bg-[#050505] border-y border-white/5">
         <div className="max-w-7xl mx-auto mb-24">
-          <div className="micro-label mb-6 text-[#0096ff]">Value Proposition</div>
-          <h2 className="text-4xl md:text-6xl font-black uppercase italic tracking-tighter">Why Choose AMARU</h2>
+          <div className="micro-label mb-6 text-[#0096ff]">The Archive Protocol</div>
+          <h2 className="text-4xl md:text-6xl font-black uppercase italic tracking-tighter">The AMARU Experience</h2>
         </div>
         <div className="max-w-7xl mx-auto grid md:grid-cols-2 lg:grid-cols-3 gap-8">
            {[
-             { title: "Premium Quality Materials", desc: "Higher-tier fabrics sourced for durability and elite feel.", icon: <Gem size={24} /> },
-             { title: "Modern Streetwear Designs", desc: "Cutting-edge silhouettes that redefine urban fashion.", icon: <LayoutGrid size={24} /> },
-             { title: "Affordable Pricing", desc: "Premium luxury experience without the gatekept prices.", icon: <Package size={24} /> },
-             { title: "Reliable Customer Support", desc: "Our concierge team is available to assist you 24/7.", icon: <MessageCircle size={24} /> },
-             { title: "Fast Delivery", desc: "Prompt dispatch and delivery both locally and globally.", icon: <Truck size={24} /> },
-             { title: "Trusted Brand", desc: "Join 500+ rebels who trust AMARU for their identity.", icon: <ShieldCheck size={24} /> }
+             { title: "ARCHIVE QUALITY", desc: "Superior textiles sourced for their elite hand-feel and longevity.", icon: <Gem size={24} /> },
+             { title: "AVANT-GARDE CUTS", desc: "Street-inspired silhouettes that challenge conventional urban wear.", icon: <LayoutGrid size={24} /> },
+             { title: "DEMOCRATIC LUXURY", desc: "Premium aesthetics made accessible to those who define the culture.", icon: <Package size={24} /> },
+             { title: "ELITE CONCIERGE", desc: "A direct human-to-human connection for all your logistical needs.", icon: <MessageCircle size={24} /> },
+             { title: "RAPID TRANSIT", desc: "Expedited logistic pipelines ensuring your archive arrives on beat.", icon: <Truck size={24} /> },
+             { title: "VERIFIED IDENTITY", desc: "Join 1,000+ rebels who navigate the city in AMARU.", icon: <ShieldCheck size={24} /> }
            ].map((item, i) => (
              <div key={i} className="flex gap-8 p-10 bg-neutral-900 rounded-[2.5rem] border border-white/5 hover:border-[#0096ff]/20 transition-all backdrop-blur-xl">
                 <div className="w-14 h-14 shrink-0 rounded-2xl bg-[#0096ff]/10 flex items-center justify-center text-[#0096ff]">{item.icon}</div>
@@ -1763,86 +1673,168 @@ const ContactView = () => {
   );
 };
 
-// --- Admin Section (Restored) ---
-const AdminView = ({ onPageChange, orders }: { onPageChange: (v: View) => void, orders: Order[] }) => {
+// --- Admin Section ---
+const AdminView = ({ 
+  onPageChange, 
+  orders, 
+  products, 
+  onAddProduct,
+  onDeleteProduct
+}: { 
+  onPageChange: (v: View) => void, 
+  orders: Order[],
+  products: Product[],
+  onAddProduct: (p: Product) => void,
+  onDeleteProduct: (id: string) => void
+}) => {
   const [activeTab, setActiveTab] = useState<'inventory' | 'orders'>('inventory');
+  const [isAdding, setIsAdding] = useState(false);
+  const [newProduct, setNewProduct] = useState<Partial<Product>>({
+    name: '',
+    price: 0,
+    category: 'Sweatshirts',
+    description: '',
+    badge: '',
+    stockCount: 50,
+    campusPickup: true,
+    inStock: true
+  });
+  const [imageFile, setImageFile] = useState<string | null>(null);
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImageFile(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleCreate = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newProduct.name || !newProduct.price || !imageFile) {
+      alert('Missing payload: Name, Price, and Asset required.');
+      return;
+    }
+
+    const p: Product = {
+      id: `sku-${Date.now()}`,
+      name: newProduct.name!,
+      price: Number(newProduct.price),
+      category: newProduct.category || 'Sweatshirts',
+      description: newProduct.description || 'Premium archive fragment.',
+      image: imageFile,
+      badge: newProduct.badge || null as any,
+      rating: 5,
+      reviews: 0,
+      inStock: true,
+      stockCount: newProduct.stockCount || 50,
+      campusPickup: true,
+      tags: ['New Release', 'Admin Managed']
+    };
+
+    onAddProduct(p);
+    setIsAdding(false);
+    setNewProduct({
+      name: '',
+      price: 0,
+      category: 'Sweatshirts',
+      description: '',
+      badge: '',
+      stockCount: 50
+    });
+    setImageFile(null);
+  };
 
   return (
     <section className="pt-32 md:pt-48 pb-20 md:pb-32 px-4 md:px-6 min-h-screen">
       <div className="max-w-7xl mx-auto">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 md:mb-24 gap-6 md:gap-8">
            <div>
-              <div className="micro-label mb-2 md:mb-4">Operations Center</div>
-              <h1 className="text-4xl md:text-7xl font-black uppercase tracking-tighter italic break-words">Management</h1>
+              <div className="micro-label mb-2 md:mb-4 text-[#0096ff]">Command Module</div>
+              <h1 className="text-4xl md:text-7xl font-black uppercase tracking-tighter italic break-words leading-none">Management</h1>
            </div>
            <div className="flex flex-wrap items-center gap-2 md:gap-4">
               <button 
                 onClick={() => setActiveTab('inventory')}
-                className={`flex-1 md:flex-none px-4 md:px-8 py-2 md:py-3 rounded-full text-[8px] md:text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'inventory' ? 'bg-[#0096ff] text-white' : 'border border-neutral-800 text-neutral-500'}`}
+                className={`flex-1 md:flex-none px-6 md:px-8 py-2 md:py-3 rounded-xl text-[8px] md:text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'inventory' ? 'bg-[#0096ff] text-white shadow-lg shadow-[#0096ff]/20' : 'bg-white/5 text-neutral-500 border border-white/5'}`}
               >
                 Inventory
               </button>
               <button 
                 onClick={() => setActiveTab('orders')}
-                className={`flex-1 md:flex-none px-4 md:px-8 py-2 md:py-3 rounded-full text-[8px] md:text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'orders' ? 'bg-[#0096ff] text-white' : 'border border-neutral-800 text-neutral-500'}`}
+                className={`flex-1 md:flex-none px-6 md:px-8 py-2 md:py-3 rounded-xl text-[8px] md:text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'orders' ? 'bg-[#0096ff] text-white shadow-lg shadow-[#0096ff]/20' : 'bg-white/5 text-neutral-500 border border-white/5'}`}
               >
                 Orders ({orders.length})
               </button>
               <button 
                 onClick={() => onPageChange('login')}
-                className="px-4 md:px-8 py-2 md:py-3 border border-red-500/20 text-red-500 rounded-full text-[8px] md:text-[10px] font-black uppercase tracking-widest hover:bg-red-500/10 transition-all"
+                className="px-6 md:px-8 py-2 md:py-3 border border-red-500/20 text-red-500 rounded-xl text-[8px] md:text-[10px] font-black uppercase tracking-widest hover:bg-red-500/10 transition-all"
               >
-                Logout
+                Exit Console
               </button>
            </div>
         </div>
 
         {activeTab === 'inventory' ? (
           <>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8 mb-12 md:mb-24">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8 mb-12 md:mb-20">
                 {[
-                  { label: 'Total Models', val: SAMPLE_PRODUCTS.length, suffix: 'SKUs' },
-                  { label: 'Market Depth', val: '1.2M', suffix: 'Ksh' },
-                  { label: 'Retail Health', val: '98', suffix: '%' }
+                  { label: 'ARCHIVE DEPTH', val: products.length, suffix: 'SKUs' },
+                  { label: 'RETAIL VALUE', val: '2.4M', suffix: 'Ksh' },
+                  { label: 'STOCK HEALTH', val: '100', suffix: '%' }
                 ].map((stat, idx) => (
-                  <div key={idx} className="bg-neutral-900 border border-neutral-800 p-8 md:p-12 rounded-[2rem] md:rounded-[3.5rem] shadow-xl group hover:border-[#0096ff] transition-all">
-                    <div className="micro-label mb-2 md:mb-4">{stat.label}</div>
+                  <div key={idx} className="bg-neutral-900/50 border border-neutral-800/50 p-8 md:p-12 rounded-[2.5rem] shadow-xl group hover:border-[#0096ff]/30 transition-all backdrop-blur-sm">
+                    <div className="micro-label mb-4 opacity-40">{stat.label}</div>
                     <div className="flex items-baseline gap-2">
-                       <p className="text-3xl md:text-5xl font-black text-[#0096ff]">{stat.val}</p>
-                       <span className="text-[10px] font-black opacity-40 uppercase tracking-widest">{stat.suffix}</span>
+                       <p className="text-3xl md:text-5xl font-black text-white">{stat.val}</p>
+                       <span className="text-[10px] font-black text-[#0096ff] uppercase tracking-widest">{stat.suffix}</span>
                     </div>
                   </div>
                 ))}
             </div>
 
             <div className="bg-neutral-900 border border-neutral-800 rounded-[2rem] md:rounded-[4rem] overflow-hidden">
-              <div className="p-8 md:p-12 border-b border-neutral-800 flex justify-between items-center">
+              <div className="p-8 md:p-12 border-b border-neutral-800 flex justify-between items-center bg-black/20 backdrop-blur-sm">
                   <h3 className="text-lg md:text-2xl font-black uppercase italic tracking-tighter">Inventory Archive</h3>
-                  <button className="bg-white text-black px-6 md:px-10 py-3 md:py-4 rounded-full font-black text-[8px] md:text-[10px] uppercase tracking-widest hover:bg-[#0096ff] hover:text-white transition-all">
-                    New SKU +
+                  <button 
+                    onClick={() => setIsAdding(true)}
+                    className="bg-white text-black px-6 md:px-10 py-3 md:py-4 rounded-full font-black text-[8px] md:text-[10px] uppercase tracking-widest hover:bg-[#0096ff] hover:text-white transition-all shadow-2xl active:scale-95"
+                  >
+                    Initiate Drop +
                   </button>
               </div>
               <div className="overflow-x-auto">
-                  <table className="w-full text-left">
+                  <table className="w-full text-left border-collapse">
                     <thead className="bg-[#050505] text-neutral-600 uppercase text-[8px] md:text-[9px] font-black tracking-[0.3em] border-b border-neutral-800">
                         <tr>
-                          <th className="px-6 md:px-12 py-4 md:py-8">Product Entity</th>
-                          <th className="px-6 md:px-12 py-4 md:py-8 hidden sm:table-cell">Classification</th>
-                          <th className="px-6 md:px-12 py-4 md:py-8">Retail Value</th>
-                          <th className="px-6 md:px-12 py-4 md:py-8 text-right">Protocol</th>
+                          <th className="px-12 py-8">Entity Details</th>
+                          <th className="px-12 py-8 hidden sm:table-cell">Category</th>
+                          <th className="px-12 py-8">Valuation</th>
+                          <th className="px-12 py-8 text-right">Protocol</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-neutral-800">
-                        {SAMPLE_PRODUCTS.map(p => (
+                        {products.map(p => (
                           <tr key={p.id} className="hover:bg-white/[0.02] transition-colors group">
-                            <td className="px-6 md:px-12 py-4 md:py-8 flex items-center gap-4 md:gap-6">
-                              <img src={p.image} className="w-10 h-14 md:w-16 md:h-20 object-cover rounded-lg md:rounded-2xl border border-neutral-800" alt="" />
-                              <span className="font-black text-xs md:text-lg uppercase group-hover:text-[#0096ff] transition-colors line-clamp-1">{p.name}</span>
+                            <td className="px-12 py-8 flex items-center gap-6">
+                              <img src={p.image} className="w-16 h-20 object-cover rounded-2xl border border-neutral-800 shadow-lg" alt="" />
+                              <div>
+                                <div className="font-black text-sm md:text-lg uppercase group-hover:text-[#0096ff] transition-colors leading-tight">{p.name}</div>
+                                <div className="text-[10px] text-neutral-600 font-bold uppercase tracking-widest mt-1">ID: {p.id.slice(0, 12)}</div>
+                              </div>
                             </td>
-                            <td className="px-6 md:px-12 py-4 md:py-8 text-[9px] md:text-[11px] font-black uppercase tracking-[0.2em] text-[#0096ff] hidden sm:table-cell">{p.category}</td>
-                            <td className="px-6 md:px-12 py-4 md:py-8 font-mono text-sm md:text-2xl italic whitespace-nowrap">Ksh {p.price.toLocaleString()}</td>
-                            <td className="px-6 md:px-12 py-4 md:py-8 text-right">
-                              <button className="text-neutral-800 hover:text-red-500 transition-colors uppercase font-black text-[8px] md:text-[10px] tracking-widest">Trash SKU</button>
+                            <td className="px-12 py-8 text-[9px] md:text-[11px] font-black uppercase tracking-[0.2em] text-neutral-500 hidden sm:table-cell">{p.category}</td>
+                            <td className="px-12 py-8 font-mono text-sm md:text-xl italic whitespace-nowrap">Ksh {p.price.toLocaleString()}</td>
+                            <td className="px-12 py-8 text-right">
+                              <button 
+                                onClick={() => onDeleteProduct(p.id)}
+                                className="text-neutral-800 hover:text-red-500 transition-all uppercase font-black text-[8px] md:text-[10px] tracking-widest p-4 hover:bg-red-500/5 rounded-full"
+                              >
+                                Decommission
+                              </button>
                             </td>
                           </tr>
                         ))}
@@ -1850,6 +1842,121 @@ const AdminView = ({ onPageChange, orders }: { onPageChange: (v: View) => void, 
                   </table>
               </div>
             </div>
+
+            {/* Direct Upload Modal */}
+            <AnimatePresence>
+              {isAdding && (
+                <motion.div 
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="fixed inset-0 z-[120] bg-black/95 backdrop-blur-xl flex items-center justify-center p-4 overflow-y-auto"
+                >
+                  <motion.div 
+                    initial={{ y: 50, scale: 0.95 }}
+                    animate={{ y: 0, scale: 1 }}
+                    className="bg-neutral-900 border border-neutral-800 w-full max-w-2xl rounded-[3rem] overflow-hidden p-8 md:p-12 relative my-auto shadow-[0_0_100px_rgba(0,150,255,0.1)]"
+                  >
+                    <button onClick={() => setIsAdding(false)} className="absolute top-8 right-8 p-3 bg-white/5 hover:bg-white/10 rounded-full text-neutral-500 hover:text-white transition-all"><X size={24} /></button>
+                    <div className="micro-label mb-4 text-[#0096ff]">New Fragment Integration</div>
+                    <h2 className="text-3xl md:text-5xl font-black uppercase italic tracking-tighter mb-10 leading-none">Initiate <span className="text-gradient">Drop</span></h2>
+                    
+                    <form onSubmit={handleCreate} className="space-y-8">
+                      <div className="grid md:grid-cols-2 gap-8">
+                        <div className="space-y-3">
+                          <label className="text-[10px] font-black uppercase tracking-widest text-neutral-600 ml-4">Segment Identity</label>
+                          <input 
+                            required
+                            type="text" 
+                            className="w-full bg-black border border-white/5 rounded-2xl px-6 py-5 text-xs font-black uppercase outline-none focus:border-[#0096ff]/50 transition-all placeholder:text-neutral-800"
+                            placeholder="PRODUCT NAME"
+                            value={newProduct.name}
+                            onChange={e => setNewProduct({...newProduct, name: e.target.value})}
+                          />
+                        </div>
+                        <div className="space-y-3">
+                          <label className="text-[10px] font-black uppercase tracking-widest text-neutral-600 ml-4">Retail Valuation (Ksh)</label>
+                          <input 
+                            required
+                            type="number" 
+                            className="w-full bg-black border border-white/5 rounded-2xl px-6 py-5 text-xs font-black uppercase outline-none focus:border-[#0096ff]/50 transition-all placeholder:text-neutral-800"
+                            placeholder="EX: 1500"
+                            value={newProduct.price}
+                            onChange={e => setNewProduct({...newProduct, price: Number(e.target.value)})}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid md:grid-cols-2 gap-8">
+                        <div className="space-y-3">
+                          <label className="text-[10px] font-black uppercase tracking-widest text-neutral-600 ml-4">Category Node</label>
+                          <select 
+                            className="w-full bg-black border border-white/5 rounded-2xl px-6 py-5 text-xs font-black uppercase outline-none focus:border-[#0096ff]/50 cursor-pointer transition-all"
+                            value={newProduct.category}
+                            onChange={e => setNewProduct({...newProduct, category: e.target.value})}
+                          >
+                            {SITE_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                          </select>
+                        </div>
+                        <div className="space-y-3">
+                          <label className="text-[10px] font-black uppercase tracking-widest text-neutral-600 ml-4">Identity Marker (Badge)</label>
+                          <input 
+                            type="text" 
+                            className="w-full bg-black border border-white/5 rounded-2xl px-6 py-5 text-xs font-black uppercase outline-none focus:border-[#0096ff]/50 transition-all placeholder:text-neutral-800"
+                            placeholder="EX: GRAIL, NEW, LIMITLESS"
+                            value={newProduct.badge}
+                            onChange={e => setNewProduct({...newProduct, badge: e.target.value})}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-3">
+                        <label className="text-[10px] font-black uppercase tracking-widest text-neutral-600 ml-4">Fragment Narrative</label>
+                        <textarea 
+                          rows={3}
+                          className="w-full bg-black border border-white/5 rounded-3xl px-6 py-5 text-xs font-black uppercase outline-none focus:border-[#0096ff]/50 resize-none transition-all placeholder:text-neutral-800"
+                          placeholder="DETAILED DESCRIPTION..."
+                          value={newProduct.description}
+                          onChange={e => setNewProduct({...newProduct, description: e.target.value})}
+                        />
+                      </div>
+
+                      <div className="space-y-3">
+                        <label className="text-[10px] font-black uppercase tracking-widest text-[#0096ff] ml-4 flex items-center gap-2">
+                           <Camera size={14} /> Direct Asset Upload
+                        </label>
+                        <div className="flex items-center gap-8 p-8 border-2 border-dashed border-[#0096ff]/10 rounded-[2rem] group hover:border-[#0096ff]/40 transition-all cursor-pointer relative bg-black/40">
+                          <input 
+                            type="file" 
+                            accept="image/*" 
+                            onChange={handleImageUpload}
+                            className="absolute inset-0 opacity-0 cursor-pointer z-10"
+                          />
+                          {imageFile ? (
+                            <img src={imageFile} className="w-24 h-32 object-cover rounded-2xl shadow-2xl ring-2 ring-[#0096ff]" alt="Preview" />
+                          ) : (
+                            <div className="w-24 h-32 rounded-2xl bg-neutral-900 flex items-center justify-center text-neutral-700 group-hover:text-[#0096ff] transition-all group-hover:scale-105 transform-gpu shadow-inner"><Plus size={32} /></div>
+                          )}
+                          <div>
+                            <div className="text-[11px] font-black uppercase tracking-[0.2em] text-white">Select Primary Visual</div>
+                            <div className="text-[9px] font-bold uppercase tracking-widest text-neutral-600 mt-2 max-w-[200px] leading-relaxed">
+                               Browse your device for high-resolution fragments to archive.
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <button 
+                        type="submit"
+                        className="w-full py-8 bg-white text-black rounded-[2rem] font-black uppercase text-[10px] tracking-[0.4em] hover:bg-[#0096ff] hover:text-white transition-all shadow-2xl shadow-[#0096ff]/20 active:scale-[0.98] mt-6"
+                      >
+                        Publish Identity to Universe
+                      </button>
+                    </form>
+                  </motion.div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </>
         ) : (
           <div className="bg-neutral-900 border border-neutral-800 rounded-[2rem] md:rounded-[4rem] overflow-hidden">
@@ -1940,13 +2047,20 @@ export default function App() {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [sortOrder, setSortOrder] = useState('pop');
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, 10000]);
+  const [allProducts, setAllProducts] = useState<Product[]>(SAMPLE_PRODUCTS);
 
   // Persistence (Mock)
   useEffect(() => {
     const savedCart = localStorage.getItem('amaru_cart');
     const savedWishlist = localStorage.getItem('amaru_wishlist');
+    const savedProducts = localStorage.getItem('amaru_products');
+    
     if (savedCart) setCart(JSON.parse(savedCart));
     if (savedWishlist) setWishlist(JSON.parse(savedWishlist));
+    if (savedProducts) setAllProducts(JSON.parse(savedProducts));
   }, []);
 
   useEffect(() => {
@@ -1956,6 +2070,17 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem('amaru_wishlist', JSON.stringify(wishlist));
   }, [wishlist]);
+
+  useEffect(() => {
+    localStorage.setItem('amaru_products', JSON.stringify(allProducts));
+  }, [allProducts]);
+
+  // Loading simulation when category changes
+  useEffect(() => {
+    setIsLoading(true);
+    const timer = setTimeout(() => setIsLoading(false), 800);
+    return () => clearTimeout(timer);
+  }, [activeCategory, sortOrder, priceRange]);
 
   const handlePageChange = (v: View) => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -2000,13 +2125,16 @@ export default function App() {
     setOrders([newOrder, ...orders]);
     
     // WhatsApp Integration for checkout
-    const itemsText = cart.map(item => `- ${item.name} (x${item.quantity})`).join('\n');
-    const message = `Hello AMARU, I'd like to place an order!\n\nOrder Details:\n${itemsText}\n\nTotal: Ksh ${total.toLocaleString()}`;
+    const itemsText = cart.map(item => `📦 *${item.name}*\n   Qty: ${item.quantity}\n   Price: Ksh ${item.price.toLocaleString()}`).join('\n\n');
+    const message = `*NEW ORDER FROM AMARU WEBSITE*\n\n*Customer:* ${newOrder.customerName}\n\n*Items:*\n${itemsText}\n\n*Total: Ksh ${total.toLocaleString()}*\n\n_Please confirm availability for pickup/delivery._`;
     window.open(`https://wa.me/254746746904?text=${encodeURIComponent(message)}`, '_blank');
     
     setCart([]);
     setIsCartOpen(false);
-    alert("Order summary sent to WhatsApp. We'll contact you shortly!");
+    // Silent success or custom elegant modal would be better than window.alert
+    setTimeout(() => {
+      handlePageChange('customer');
+    }, 500);
   };
 
   const toggleWishlist = (id: string) => {
@@ -2015,11 +2143,37 @@ export default function App() {
     );
   };
 
-  const filteredProducts = SAMPLE_PRODUCTS.filter(p => {
-    const matchesCategory = activeCategory === 'All Drops' || p.category === activeCategory;
+  const handleAddProduct = (p: Product) => {
+    setAllProducts(prev => [p, ...prev]);
+  };
+
+  const handleDeleteProduct = (id: string) => {
+    if (window.confirm('Are you sure you want to delete this SKU from the archive?')) {
+      setAllProducts(prev => prev.filter(p => p.id !== id));
+    }
+  };
+
+  const filteredProducts = allProducts.filter(p => {
+    const activeCatUpper = activeCategory.toUpperCase();
+    const isUnder1K = activeCatUpper === 'UNDER 1K';
+    
+    const matchesCategory = activeCatUpper === 'ALL DROPS' || 
+                            p.category.toUpperCase() === activeCatUpper ||
+                            (activeCatUpper === 'CAMPUS ESSENTIALS' && p.campusPickup) ||
+                            (isUnder1K && p.price < 1000);
+                            
     const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                         p.category.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesCategory && matchesSearch;
+                         p.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         p.description.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    const matchesPrice = p.price >= priceRange[0] && p.price <= priceRange[1];
+                         
+    return matchesCategory && matchesSearch && matchesPrice;
+  }).sort((a, b) => {
+    if (sortOrder === 'low') return a.price - b.price;
+    if (sortOrder === 'high') return b.price - a.price;
+    if (sortOrder === 'alpha') return a.name.localeCompare(b.name);
+    return (b.rating || 0) - (a.rating || 0); // Default/Pop
   });
 
   return (
@@ -2030,6 +2184,7 @@ export default function App() {
           currentView={view} 
           onSearchOpen={() => setIsSearchOpen(true)}
           wishlistCount={wishlist.length}
+          onCartOpen={() => setIsCartOpen(true)}
         />
       )}
 
@@ -2103,6 +2258,7 @@ export default function App() {
                 onToggleWishlist={toggleWishlist}
                 wishlist={wishlist}
                 onQuickView={(p) => setQuickViewProduct(p)}
+                products={allProducts}
               />
             )}
             {view === 'shop' && (
@@ -2114,20 +2270,34 @@ export default function App() {
                 onToggleWishlist={toggleWishlist}
                 wishlist={wishlist}
                 onQuickView={(p) => setQuickViewProduct(p)}
+                sortOrder={sortOrder}
+                setSortOrder={setSortOrder}
+                priceRange={priceRange}
+                setPriceRange={setPriceRange}
+                isLoading={isLoading}
               />
             )}
             {view === 'wishlist' && (
               <WishlistView 
-                products={SAMPLE_PRODUCTS.filter(p => wishlist.includes(p.id))} 
+                products={allProducts.filter(p => wishlist.includes(p.id))} 
                 onAdd={addToCart}
                 onToggleWishlist={toggleWishlist}
                 onQuickView={(p) => setQuickViewProduct(p)}
+                onPageChange={handlePageChange}
               />
             )}
             {view === 'projects' && <ProjectsView />}
             {view === 'about' && <AboutView onPageChange={handlePageChange} />}
             {view === 'contact' && <ContactView />}
-            {view === 'admin' && <AdminView onPageChange={handlePageChange} orders={orders} />}
+            {view === 'admin' && (
+              <AdminView 
+                onPageChange={handlePageChange} 
+                orders={orders} 
+                products={allProducts}
+                onAddProduct={handleAddProduct}
+                onDeleteProduct={handleDeleteProduct}
+              />
+            )}
             {view !== 'admin' && <Footer onPageChange={handlePageChange} />}
           </motion.main>
         )}
