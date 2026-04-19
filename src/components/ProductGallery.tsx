@@ -41,14 +41,14 @@ const ProductGallery: React.FC<ProductGalleryProps> = ({ images, productName }) 
               onClick={() => setSelectedImageIndex(index)}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className={``
+              className={`
                 flex-shrink-0 w-16 h-16 rounded border-2 overflow-hidden
                 transition-all ${
                   index === selectedImageIndex
                     ? 'border-[#0096ff] shadow-lg shadow-[#0096ff]/40'
                     : 'border-neutral-700 hover:border-neutral-600'
                 }
-              ``}
+              `}
             >
               <OptimizedImage
                 image={image}
